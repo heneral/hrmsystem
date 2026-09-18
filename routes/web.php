@@ -23,10 +23,15 @@ use App\Http\Controllers\FrontDeskReportController;
 use App\Http\Controllers\FrontDeskServiceController;
 use App\Http\Controllers\FrontDeskCheckInController;
 use App\Http\Controllers\FrontDeskCheckOutController;
+use App\Http\Controllers\FrontDeskNotificationController;
+use App\Http\Controllers\FrontDeskServiceOrderController;
+use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/about', [PublicPageController::class, 'about'])->name('public.about');
+Route::get('/contact', [PublicPageController::class, 'contact'])->name('public.contact');
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 
@@ -45,6 +50,9 @@ Route::middleware(['auth', 'verified', 'role:front-desk'])->prefix('front-desk')
     Route::get('/check-out', FrontDeskCheckOutController::class)->name('checkout.index');
     Route::get('/services', [FrontDeskServiceController::class, 'index'])->name('services.index');
     Route::post('/services/{reservation}', [FrontDeskServiceController::class, 'store'])->name('services.store');
+    Route::get('/services/orders/{serviceOrder}', [FrontDeskServiceOrderController::class, 'show'])->name('services.show');
+    Route::get('/notifications', [FrontDeskNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [FrontDeskNotificationController::class, 'markRead'])->name('notifications.read');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
