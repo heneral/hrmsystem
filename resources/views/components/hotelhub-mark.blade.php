@@ -1,0 +1,1 @@
+<a {{ $attributes->merge(['href' => route('home'), 'class' => 'inline-flex items-center gap-3']) }}><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400 text-lg font-black text-stone-950">H</span><span class="text-2xl font-semibold tracking-tight text-stone-950">Hotel<span class="text-amber-500">Hub</span></span></a>

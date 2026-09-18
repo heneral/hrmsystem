@@ -1,0 +1,13 @@
+<x-app-layout>
+    <x-slot name="header"><div><p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk</p><h2 class="mt-1 text-2xl font-semibold text-stone-900">Check-out</h2></div></x-slot>
+    <div class="bg-stone-50 py-8"><div class="mx-auto max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8"><p class="text-sm text-stone-500">Today's checked-in departures. Room and posted guest-service charges must be paid before checkout.</p>
+        @forelse($reservations as $reservation)
+            @php($paid = (float) $reservation->payments->whereIn('status', ['paid', 'partially_refunded'])->sum('amount'))
+            @php($folio = (float) $reservation->folioTransactions->where('status', 'posted')->sum('amount'))
+            @php($balance = max(0, (float) $reservation->total + $folio - $paid))
+            <section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><div class="flex flex-wrap items-start justify-between gap-4"><div><p class="font-semibold">{{ $reservation->reservation_number }} · {{ $reservation->customer?->name ?? 'Guest' }}</p><p class="mt-1 text-sm text-stone-500">Room {{ $reservation->room->room_number }} · {{ $reservation->room->roomType->name }}</p><div class="mt-3 grid grid-cols-4 gap-4 text-sm"><div><p class="text-xs uppercase tracking-widest text-stone-400">Room</p><p class="font-semibold">${{ number_format($reservation->total, 2) }}</p></div><div><p class="text-xs uppercase tracking-widest text-stone-400">Services</p><p class="font-semibold">${{ number_format($folio, 2) }}</p></div><div><p class="text-xs uppercase tracking-widest text-stone-400">Paid</p><p class="font-semibold">${{ number_format($paid, 2) }}</p></div><div><p class="text-xs uppercase tracking-widest text-stone-400">Balance</p><p class="font-semibold {{ $balance > 0 ? 'text-rose-700' : 'text-emerald-700' }}">${{ number_format($balance, 2) }}</p></div></div></div>@if($balance <= 0)<form method="post" action="{{ route('admin.operations.reservations.check-out', $reservation) }}" onsubmit="return confirm('Complete checkout and send the room to housekeeping?')">@csrf<button class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white">Complete check-out</button></form>@else<a href="{{ route('frontdesk.payments.index', ['search' => $reservation->reservation_number]) }}" class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700">Collect payment</a>@endif</div></section>
+        @empty
+            <div class="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500">No checked-in departures scheduled for today.</div>
+        @endforelse
+    </div></div>
+</x-app-layout>
