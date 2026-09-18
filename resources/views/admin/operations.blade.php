@@ -1,17 +1,329 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk workspace</p><h2 class="mt-1 text-2xl font-semibold text-stone-900">Operations</h2></div></x-slot>
+    <x-slot name="header">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk workspace</p>
+            <h2 class="mt-1 text-2xl font-semibold text-stone-900">
+                Operations
+            </h2>
+        </div>
+    </x-slot>
     <div class="bg-stone-50 py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-            @if(session('status'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ session('status') }}</div>@endif
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">@foreach($roomCounts as $label => $count)<div class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $label) }} rooms</p><p class="mt-3 text-3xl font-semibold">{{ $count }}</p></div>@endforeach</div>
-            <div class="grid gap-6 lg:grid-cols-2">
-                <section class="rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b p-5"><h3 class="font-semibold">Today’s arrivals <span class="text-stone-400">({{ $arrivals->count() }})</span></h3></div><div class="divide-y">@forelse($arrivals as $reservation)<div class="p-5"><div class="flex justify-between"><p class="font-semibold">Room {{ $reservation->room->room_number }}</p><span class="text-sm text-stone-500">{{ $reservation->reservation_number }}</span></div><p class="mt-1 text-sm text-stone-500">{{ $reservation->room->roomType->name }} · {{ $reservation->adults }} adults, {{ $reservation->children }} children</p>@if(auth()->user()->hasPermission('reservations.manage'))<form method="post" action="{{ route('admin.operations.reservations.check-in', $reservation) }}" class="mt-3">@csrf<button class="text-xs font-semibold text-amber-700">Check in guest</button></form>@endif</div>@empty<div class="p-6 text-sm text-stone-500">No arrivals scheduled today.</div>@endforelse</div></section>
-                <section class="rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b p-5"><h3 class="font-semibold">Today’s departures <span class="text-stone-400">({{ $departures->count() }})</span></h3></div><div class="divide-y">@forelse($departures as $reservation)<div class="p-5"><div class="flex justify-between"><p class="font-semibold">Room {{ $reservation->room->room_number }}</p><span class="text-sm text-stone-500">{{ $reservation->reservation_number }}</span></div><p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Checkout today</p>@if(auth()->user()->hasPermission('reservations.manage'))<form method="post" action="{{ route('admin.operations.reservations.check-out', $reservation) }}" class="mt-3">@csrf<button class="text-xs font-semibold text-rose-700">Check out guest</button></form>@endif</div>@empty<div class="p-6 text-sm text-stone-500">No departures scheduled today.</div>@endforelse</div></section>
+            @if (session('status'))
+                <div
+                    class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"
+                >
+                    {{ session('status') }}
+                </div>
+            @endif
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ($roomCounts as $label => $count)
+                    <div
+                        class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+                    >
+                        <p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $label) }} rooms</p>
+                        <p class="mt-3 text-3xl font-semibold">{{ $count }}</p>
+                    </div>
+                @endforeach
             </div>
-            <section class="rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b p-5"><h3 class="font-semibold">Room board</h3><p class="mt-1 text-sm text-stone-500">Checkout moves rooms to dirty; cleaning moves them back to clean.</p></div><div class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">@foreach($rooms as $room)<div class="rounded-lg border border-stone-200 p-4"><div class="flex items-center justify-between"><span class="font-semibold">{{ $room->room_number }}</span><span class="h-2.5 w-2.5 rounded-full {{ in_array($room->status->value, ['available', 'clean']) ? 'bg-emerald-500' : (in_array($room->status->value, ['maintenance', 'out_of_order']) ? 'bg-rose-500' : 'bg-amber-400') }}"></span></div><p class="mt-1 text-xs text-stone-500">{{ $room->roomType->name }}</p><p class="mt-3 text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $room->status->value) }}</p></div>@endforeach</div></section>
             <div class="grid gap-6 lg:grid-cols-2">
-                <section class="rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b p-5"><h3 class="font-semibold">Housekeeping queue</h3><p class="mt-1 text-sm text-stone-500">Ask guests in occupied rooms before daily cleaning. Checkout cleaning does not require consent.</p></div><div class="divide-y">@forelse($housekeepingTasks as $task)<div class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="font-semibold">Room {{ $task->room->room_number }}</span><p class="mt-1 text-xs font-semibold uppercase tracking-widest text-amber-700">{{ $task->task_type === 'daily' ? 'Daily guest cleaning' : 'Checkout cleaning' }}</p>@if($task->reservation)<p class="mt-1 text-sm text-stone-600">{{ $task->reservation->customer?->name ?? 'Guest' }} · {{ $task->reservation->reservation_number }}</p><p class="text-xs text-stone-500">{{ $task->task_type === 'daily' ? 'Current stay' : 'Checked out '.$task->reservation->check_out?->format('M j, Y') }}</p>@endif</div><span class="text-sm capitalize text-stone-500">{{ str_replace('_', ' ', $task->status) }}</span></div>@if($task->notes)<p class="mt-2 text-xs text-stone-500">{{ $task->notes }}</p>@endif @if($task->guest_contacted_at)<p class="mt-1 text-xs text-stone-400">Guest contacted {{ $task->guest_contacted_at->format('M j, g:i A') }} · {{ $task->guest_consent }}</p>@endif @if($task->started_at)<p class="mt-1 text-xs text-stone-400">Started {{ $task->started_at->format('M j, g:i A') }}</p>@endif<div class="mt-3">@if($task->status === 'pending' && $task->task_type === 'daily')<form method="post" action="{{ route('admin.operations.housekeeping.guest-response', $task) }}" class="flex flex-wrap items-center gap-2">@csrf<span class="text-xs text-stone-500">Did guest agree?</span><button name="response" value="accepted" class="text-xs font-semibold text-emerald-700">Yes, start cleaning</button><button name="response" value="declined" class="text-xs font-semibold text-stone-500">No, declined</button></form>@elseif($task->status === 'pending')<form method="post" action="{{ route('admin.operations.housekeeping.start', $task) }}">@csrf<button class="text-xs font-semibold text-amber-700">Start cleaning</button></form>@elseif($task->status === 'in_progress')<form method="post" action="{{ route('admin.operations.housekeeping.complete', $task) }}">@csrf<input name="notes" class="mr-2 rounded border-stone-300 text-xs" placeholder="Cleaning notes"><button class="text-xs font-semibold text-emerald-700">Mark clean</button></form>@endif</div></div>@empty<div class="p-5 text-sm text-stone-500">No open housekeeping tasks.</div>@endforelse</div></section>
-                <section class="rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b p-5"><h3 class="font-semibold">Maintenance queue</h3><p class="mt-1 text-sm text-stone-500">Report the repair description and block the room until it is resolved.</p></div>@if(auth()->user()->hasPermission('maintenance.manage') || auth()->user()->hasPermission('housekeeping.manage'))<form method="post" action="{{ route('admin.operations.maintenance.store') }}" class="border-b p-4">@csrf<div class="grid gap-2 sm:grid-cols-2"><select name="room_id" required class="rounded-lg border-stone-300 text-sm"><option value="">Room</option>@foreach($rooms as $room)<option value="{{ $room->id }}">{{ $room->room_number }} · {{ $room->roomType->name }}</option>@endforeach</select><select name="priority" class="rounded-lg border-stone-300 text-sm"><option value="normal">Normal priority</option><option value="high">High priority</option><option value="critical">Critical / out of order</option></select><textarea name="description" required rows="3" placeholder="Describe the repair issue" class="rounded-lg border-stone-300 text-sm sm:col-span-2"></textarea><button class="rounded-lg bg-stone-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2">Report repair</button></div></form>@endif<div class="divide-y">@forelse($maintenanceRequests as $request)<div class="p-4"><div class="flex justify-between"><span class="font-semibold">Room {{ $request->room->room_number }}</span><span class="text-sm capitalize text-stone-500">{{ $request->priority }} · {{ str_replace('_', ' ', $request->status) }}</span></div><p class="mt-2 text-sm text-stone-600">{{ $request->description }}</p><form method="post" action="{{ route('admin.operations.maintenance.resolve', $request) }}" class="mt-3">@csrf<button class="text-xs font-semibold text-emerald-700">Mark resolved</button></form></div>@empty<div class="p-5 text-sm text-stone-500">No open maintenance requests.</div>@endforelse</div></section>
+                <section
+                    class="rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b p-5">
+                        <h3 class="font-semibold">
+                            Today’s arrivals
+                            <span class="text-stone-400"
+                                >({{ $arrivals->count() }})</span
+                            >
+                        </h3>
+                    </div>
+                    <div class="divide-y">
+                        @forelse ($arrivals as $reservation)
+                            <div class="p-5">
+                                <div class="flex justify-between">
+                                    <p class="font-semibold">Room {{ $reservation->room->room_number }}</p>
+                                    <span
+                                        class="text-sm text-stone-500"
+                                        >{{ $reservation->reservation_number }}</span
+                                    >
+                                </div>
+                                <p class="mt-1 text-sm text-stone-500">{{ $reservation->room->roomType->name }} · {{ $reservation->adults }} adults, {{ $reservation->children }} children</p>
+                                @if (auth()->user()->hasPermission('reservations.manage'))
+                                    <form
+                                        method="post"
+                                        action="{{ route('admin.operations.reservations.check-in', $reservation) }}"
+                                        class="mt-3"
+                                    >
+                                        @csrf
+                                        <button
+                                            class="text-xs font-semibold text-amber-700"
+                                        >
+                                            Check in guest
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="p-6 text-sm text-stone-500">
+                                No arrivals scheduled today.
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+                <section
+                    class="rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b p-5">
+                        <h3 class="font-semibold">
+                            Today’s departures
+                            <span class="text-stone-400"
+                                >({{ $departures->count() }})</span
+                            >
+                        </h3>
+                    </div>
+                    <div class="divide-y">
+                        @forelse ($departures as $reservation)
+                            <div class="p-5">
+                                <div class="flex justify-between">
+                                    <p class="font-semibold">Room {{ $reservation->room->room_number }}</p>
+                                    <span
+                                        class="text-sm text-stone-500"
+                                        >{{ $reservation->reservation_number }}</span
+                                    >
+                                </div>
+                                <p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Checkout today</p>
+                                @if (auth()->user()->hasPermission('reservations.manage'))
+                                    <form
+                                        method="post"
+                                        action="{{ route('admin.operations.reservations.check-out', $reservation) }}"
+                                        class="mt-3"
+                                    >
+                                        @csrf
+                                        <button
+                                            class="text-xs font-semibold text-rose-700"
+                                        >
+                                            Check out guest
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="p-6 text-sm text-stone-500">
+                                No departures scheduled today.
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+            </div>
+            <section
+                class="rounded-xl border border-stone-200 bg-white shadow-sm"
+            >
+                <div class="border-b p-5">
+                    <h3 class="font-semibold">Room board</h3>
+                    <p class="mt-1 text-sm text-stone-500">Checkout moves rooms to dirty; cleaning moves them back to clean.</p>
+                </div>
+                <div class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($rooms as $room)
+                        <div class="rounded-lg border border-stone-200 p-4">
+                            <div class="flex items-center justify-between">
+                                <span
+                                    class="font-semibold"
+                                    >{{ $room->room_number }}</span
+                                ><span
+                                    class="h-2.5 w-2.5 rounded-full {{ in_array($room->status->value, ['available', 'clean']) ? 'bg-emerald-500' : (in_array($room->status->value, ['maintenance', 'out_of_order']) ? 'bg-rose-500' : 'bg-amber-400') }}"
+                                ></span>
+                            </div>
+                            <p class="mt-1 text-xs text-stone-500">{{ $room->roomType->name }}</p>
+                            <p class="mt-3 text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $room->status->value) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+            <div class="grid gap-6 lg:grid-cols-2">
+                <section
+                    class="rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b p-5">
+                        <h3 class="font-semibold">Housekeeping queue</h3>
+                        <p class="mt-1 text-sm text-stone-500">Ask guests in occupied rooms before daily cleaning. Checkout cleaning does not require consent.</p>
+                    </div>
+                    <div class="divide-y">
+                        @forelse ($housekeepingTasks as $task)
+                            <div class="p-4">
+                                <div
+                                    class="flex items-start justify-between gap-3"
+                                >
+                                    <div>
+                                        <span class="font-semibold"
+                                            >Room {{ $task->room->room_number }}</span
+                                        >
+                                        <p class="mt-1 text-xs font-semibold uppercase tracking-widest text-amber-700">{{ $task->task_type === 'daily' ? 'Daily guest cleaning' : 'Checkout cleaning' }}</p>
+                                        @if ($task->reservation)
+                                            <p class="mt-1 text-sm text-stone-600">{{ $task->reservation->customer?->name ?? 'Guest' }} · {{ $task->reservation->reservation_number }}</p>
+                                            <p class="text-xs text-stone-500">{{ $task->task_type === 'daily' ? 'Current stay' : 'Checked out '.$task->reservation->check_out?->format('M j, Y') }}</p>
+                                        @endif
+                                    </div>
+                                    <span
+                                        class="text-sm capitalize text-stone-500"
+                                        >{{ str_replace('_', ' ', $task->status) }}</span
+                                    >
+                                </div>
+                                @if ($task->notes)
+                                    <p class="mt-2 text-xs text-stone-500">{{ $task->notes }}</p>
+                                @endif
+                                @if ($task->guest_contacted_at)
+                                    <p class="mt-1 text-xs text-stone-400">Guest contacted {{ $task->guest_contacted_at->format('M j, g:i A') }} · {{ $task->guest_consent }}</p>
+                                @endif
+                                @if ($task->started_at)
+                                    <p class="mt-1 text-xs text-stone-400">Started {{ $task->started_at->format('M j, g:i A') }}</p>
+                                @endif
+                                <div class="mt-3">
+                                    @if ($task->status === 'pending' && $task->task_type === 'daily')
+                                        <form
+                                            method="post"
+                                            action="{{ route('admin.operations.housekeeping.guest-response', $task) }}"
+                                            class="flex flex-wrap items-center gap-2"
+                                        >
+                                            @csrf
+                                            <span class="text-xs text-stone-500"
+                                                >Did guest agree?</span
+                                            ><button
+                                                name="response"
+                                                value="accepted"
+                                                class="text-xs font-semibold text-emerald-700"
+                                            >
+                                                Yes, start cleaning</button
+                                            ><button
+                                                name="response"
+                                                value="declined"
+                                                class="text-xs font-semibold text-stone-500"
+                                            >
+                                                No, declined
+                                            </button>
+                                        </form>
+                                    @elseif ($task->status === 'pending')
+                                        <form
+                                            method="post"
+                                            action="{{ route('admin.operations.housekeeping.start', $task) }}"
+                                        >
+                                            @csrf
+                                            <button
+                                                class="text-xs font-semibold text-amber-700"
+                                            >
+                                                Start cleaning
+                                            </button>
+                                        </form>
+                                    @elseif ($task->status === 'in_progress')
+                                        <form
+                                            method="post"
+                                            action="{{ route('admin.operations.housekeeping.complete', $task) }}"
+                                        >
+                                            @csrf
+                                            <input
+                                                name="notes"
+                                                class="mr-2 rounded border-stone-300 text-xs"
+                                                placeholder="Cleaning notes"
+                                            /><button
+                                                class="text-xs font-semibold text-emerald-700"
+                                            >
+                                                Mark clean
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-5 text-sm text-stone-500">
+                                No open housekeeping tasks.
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+                <section
+                    class="rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b p-5">
+                        <h3 class="font-semibold">Maintenance queue</h3>
+                        <p class="mt-1 text-sm text-stone-500">Report the repair description and block the room until it is resolved.</p>
+                    </div>
+                    @if (auth()->user()->hasPermission('maintenance.manage') || auth()->user()->hasPermission('housekeeping.manage'))
+                        <form
+                            method="post"
+                            action="{{ route('admin.operations.maintenance.store') }}"
+                            class="border-b p-4"
+                        >
+                            @csrf
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                <select
+                                    name="room_id"
+                                    required
+                                    class="rounded-lg border-stone-300 text-sm"
+                                >
+                                    <option value="">Room</option>
+                                    @foreach ($rooms as $room)
+                                        <option value="{{ $room->id }}">
+                                            {{ $room->room_number }} · {{ $room->roomType->name }}
+                                        </option>
+                                    @endforeach</select
+                                ><select
+                                    name="priority"
+                                    class="rounded-lg border-stone-300 text-sm"
+                                >
+                                    <option value="normal">
+                                        Normal priority
+                                    </option>
+                                    <option value="high">High priority</option>
+                                    <option value="critical">
+                                        Critical / out of order
+                                    </option></select
+                                ><textarea
+                                    name="description"
+                                    required
+                                    rows="3"
+                                    placeholder="Describe the repair issue"
+                                    class="rounded-lg border-stone-300 text-sm sm:col-span-2"
+                                ></textarea
+                                ><button
+                                    class="rounded-lg bg-stone-900 px-3 py-2 text-sm font-semibold text-white sm:col-span-2"
+                                >
+                                    Report repair
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+                    <div class="divide-y">
+                        @forelse ($maintenanceRequests as $request)
+                            <div class="p-4">
+                                <div class="flex justify-between">
+                                    <span class="font-semibold"
+                                        >Room {{ $request->room->room_number }}</span
+                                    ><span
+                                        class="text-sm capitalize text-stone-500"
+                                        >{{ $request->priority }} · {{ str_replace('_', ' ', $request->status) }}</span
+                                    >
+                                </div>
+                                <p class="mt-2 text-sm text-stone-600">{{ $request->description }}</p>
+                                <form
+                                    method="post"
+                                    action="{{ route('admin.operations.maintenance.resolve', $request) }}"
+                                    class="mt-3"
+                                >
+                                    @csrf
+                                    <button
+                                        class="text-xs font-semibold text-emerald-700"
+                                    >
+                                        Mark resolved
+                                    </button>
+                                </form>
+                            </div>
+                        @empty
+                            <div class="p-5 text-sm text-stone-500">
+                                No open maintenance requests.
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
             </div>
         </div>
     </div>

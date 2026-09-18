@@ -23,7 +23,16 @@ class FrontDeskReportController extends Controller
             ->whereIn('status', ['confirmed', 'checked_in'])
             ->get()
             ->sum(fn ($reservation) => max(0, (float) $reservation->total - (float) ($reservation->paid_total ?? 0)));
-        $metrics = compact('arrivals', 'departures', 'newReservations', 'cancelled', 'checkedIn', 'checkedOut', 'paymentsCollected', 'outstandingBalances');
+        $metrics = [
+            'arrivals' => $arrivals,
+            'departures' => $departures,
+            'new_reservations' => $newReservations,
+            'cancelled' => $cancelled,
+            'checked_in' => $checkedIn,
+            'checked_out' => $checkedOut,
+            'payments_collected' => $paymentsCollected,
+            'outstanding_balances' => $outstandingBalances,
+        ];
 
         return view('frontdesk.reports.daily', compact('date', 'metrics'));
     }

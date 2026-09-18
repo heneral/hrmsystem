@@ -1,9 +1,98 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk</p><h2 class="mt-1 text-2xl font-semibold text-stone-900">Guest services</h2></div></x-slot>
-    <div class="bg-stone-50 py-8"><div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-        @if(session('status'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ session('status') }}</div>@endif
-        <section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><h3 class="font-semibold">+ Add guest service</h3><p class="mt-1 text-sm text-stone-500">Use existing catalog services. Prices are captured server-side and posted to the guest folio.</p><div class="mt-4 flex flex-wrap gap-2">@foreach($serviceGroups as $category => $group)<span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-stone-600">{{ str_replace('_', ' ', $category) }} · {{ $group->count() }}</span>@endforeach</div></section>
-        <div class="grid gap-4 lg:grid-cols-2">@forelse($reservations as $reservation)<section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><div class="flex items-start justify-between gap-4"><div><p class="font-semibold">{{ $reservation->reservation_number }}</p><p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Room {{ $reservation->room->room_number }}</p></div><span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold uppercase">{{ $reservation->status->value }}</span></div><form method="post" action="{{ route('frontdesk.services.store', $reservation) }}" class="mt-4 space-y-2">@csrf<div class="flex flex-wrap gap-2"><select name="service_id" required class="min-w-56 flex-1 rounded-lg border-stone-300 text-sm"><option value="">Select service</option>@foreach($serviceGroups as $category => $group)<optgroup label="{{ ucfirst(str_replace('_', ' ', $category)) }}">@foreach($group as $service)<option value="{{ $service->id }}">{{ $service->name }} · ${{ number_format((float) $service->prices->first()?->price, 2) }} / {{ str_replace('_', ' ', $service->pricing_unit->value) }}</option>@endforeach</optgroup>@endforeach</select><input type="number" name="quantity" value="1" min="1" max="100" required class="w-20 rounded-lg border-stone-300 text-sm"><button class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white">Add charge</button></div><div class="flex flex-wrap gap-2"><input name="delivery_location" value="Room {{ $reservation->room->room_number }}" class="flex-1 rounded-lg border-stone-300 text-sm" placeholder="Delivery location"><input name="notes" class="flex-1 rounded-lg border-stone-300 text-sm" placeholder="Notes or delivery instructions"></div></form></section>@empty<div class="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500">No active reservations are available for service charges.</div>@endforelse</div><div>{{ $reservations->links() }}</div>
-        <section class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b border-stone-200 p-5"><h3 class="font-semibold">Recent service requests</h3><p class="mt-1 text-sm text-stone-500">Every request is linked to a reservation and folio transaction.</p></div><div class="divide-y divide-stone-100">@forelse($orders as $order)<div class="flex flex-wrap items-center justify-between gap-4 p-5"><div><p class="font-semibold">{{ $order->order_number }} · {{ $order->items->pluck('description')->join(', ') }}</p><p class="mt-1 text-sm text-stone-500">Room {{ $order->reservation->room->room_number }} · {{ str_replace('_', ' ', $order->category) }} · {{ $order->delivery_location }}</p></div><div class="text-right"><p class="font-semibold">${{ number_format($order->items->sum('total'), 2) }}</p><span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold uppercase text-amber-700">{{ $order->status }}</span></div></div>@empty<div class="p-6 text-sm text-stone-500">No service requests yet.</div>@endforelse</div></section>
-    </div></div>
+    <x-slot name="header">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk</p>
+            <h2 class="mt-1 text-2xl font-semibold text-stone-900">
+                Guest services
+            </h2>
+        </div>
+    </x-slot>
+
+    <div class="bg-stone-50 py-8">
+        <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            @if (session('status'))
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+                <h3 class="font-semibold">+ Add guest service</h3>
+                <p class="mt-1 text-sm text-stone-500">Use existing catalog services. Prices are captured server-side and posted to the guest folio.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    @foreach ($serviceGroups as $category => $group)
+                        <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-stone-600">{{ str_replace('_', ' ', $category) }} · {{ $group->count() }}</span>
+                    @endforeach
+                </div>
+            </section>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                @forelse ($reservations as $reservation)
+                    <section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="font-semibold">{{ $reservation->reservation_number }}</p>
+                                <p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Room {{ $reservation->room->room_number }}</p>
+                            </div>
+                            <span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold uppercase">{{ $reservation->status->value }}</span>
+                        </div>
+
+                        <form method="post" action="{{ route('frontdesk.services.store', $reservation) }}" class="mt-4 space-y-2">
+                            @csrf
+                            <div class="flex flex-wrap gap-2">
+                                <select name="service_id" required class="min-w-56 flex-1 rounded-lg border-stone-300 text-sm">
+                                    <option value="">Select service</option>
+                                    @foreach ($serviceGroups as $category => $group)
+                                        <optgroup label="{{ ucfirst(str_replace('_', ' ', $category)) }}">
+                                            @foreach ($group as $service)
+                                                <option value="{{ $service->id }}">{{ $service->name }} · ${{ number_format((float) $service->prices->first()?->price, 2) }} / {{ str_replace('_', ' ', $service->pricing_unit->value) }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
+                                <input type="number" name="quantity" value="1" min="1" max="100" required class="w-20 rounded-lg border-stone-300 text-sm">
+                                <button class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white">Add charge</button>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <input name="delivery_location" value="Room {{ $reservation->room->room_number }}" class="flex-1 rounded-lg border-stone-300 text-sm" placeholder="Delivery location">
+                                <input name="notes" class="flex-1 rounded-lg border-stone-300 text-sm" placeholder="Notes or delivery instructions">
+                            </div>
+                        </form>
+                    </section>
+                @empty
+                    <div class="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500">
+                        No active reservations are available for service
+                        charges.
+                    </div>
+                @endforelse
+            </div>
+
+            <div>{{ $reservations->links() }}</div>
+
+            <section class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+                <div class="border-b border-stone-200 p-5">
+                    <h3 class="font-semibold">Recent service requests</h3>
+                    <p class="mt-1 text-sm text-stone-500">Every request is linked to a reservation and folio transaction.</p>
+                </div>
+                <div class="divide-y divide-stone-100">
+                    @forelse ($orders as $order)
+                        <a href="{{ route('frontdesk.services.show', $order) }}" class="flex flex-wrap items-center justify-between gap-4 p-5 transition hover:bg-stone-50">
+                            <div>
+                                <p class="font-semibold">{{ $order->order_number }} · {{ $order->items->pluck('description')->join(', ') }}</p>
+                                <p class="mt-1 text-sm text-stone-500">Room {{ $order->reservation->room->room_number }} · {{ str_replace('_', ' ', $order->category) }} · {{ $order->delivery_location }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">${{ number_format($order->items->sum('total'), 2) }}</p>
+                                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold uppercase text-amber-700">{{ $order->status }}</span>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="p-6 text-sm text-stone-500">
+                            No service requests yet.
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+        </div>
+    </div>
 </x-app-layout>

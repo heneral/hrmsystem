@@ -1,4 +1,80 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk</p><h2 class="mt-1 text-2xl font-semibold text-stone-900">Guests</h2></div></x-slot>
-    <div class="bg-stone-50 py-8"><div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8"><section class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><form method="get" class="flex flex-col gap-3 sm:flex-row"><input name="search" value="{{ request('search') }}" placeholder="Search name, email, or phone" class="w-full rounded-lg border-stone-300 text-sm"><button class="rounded-lg bg-stone-900 px-5 py-2 text-sm font-semibold text-white">Search guests</button></form></section><section class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b border-stone-200 p-5"><h3 class="font-semibold">Guest directory</h3><p class="mt-1 text-sm text-stone-500">Search returning guests before creating a new record.</p></div><div class="overflow-x-auto"><table class="w-full min-w-[700px] text-left text-sm"><thead class="bg-stone-50 text-xs uppercase tracking-widest text-stone-500"><tr><th class="px-5 py-3">Guest</th><th class="px-5 py-3">Contact</th><th class="px-5 py-3">Reservations</th><th class="px-5 py-3">Latest stay</th></tr></thead><tbody class="divide-y divide-stone-100">@forelse($guests as $guest)<tr><td class="px-5 py-4 font-semibold">{{ $guest->first_name }} {{ $guest->last_name }}</td><td class="px-5 py-4 text-stone-500">{{ $guest->email ?? 'No email' }}<br>{{ $guest->phone ?? 'No phone' }}</td><td class="px-5 py-4">{{ $guest->reservations_count }}</td><td class="px-5 py-4 text-stone-500">{{ $guest->reservations->first()?->reservation_number ?? 'No reservations' }}</td></tr>@empty<tr><td colspan="4" class="px-5 py-10 text-center text-stone-500">No guests found.</td></tr>@endforelse</tbody></table></div><div class="border-t border-stone-200 p-5">{{ $guests->links() }}</div></section></div></div>
+    <x-slot name="header">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk</p>
+            <h2 class="mt-1 text-2xl font-semibold text-stone-900">Guests</h2>
+        </div>
+    </x-slot>
+    <div class="bg-stone-50 py-8">
+        <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <section
+                class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+            >
+                <form method="get" class="flex flex-col gap-3 sm:flex-row">
+                    <input
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Search name, email, or phone"
+                        class="w-full rounded-lg border-stone-300 text-sm"
+                    /><button
+                        class="rounded-lg bg-stone-900 px-5 py-2 text-sm font-semibold text-white"
+                    >
+                        Search guests
+                    </button>
+                </form>
+            </section>
+            <section
+                class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+            >
+                <div class="border-b border-stone-200 p-5">
+                    <h3 class="font-semibold">Guest directory</h3>
+                    <p class="mt-1 text-sm text-stone-500">Search returning guests before creating a new record.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[700px] text-left text-sm">
+                        <thead
+                            class="bg-stone-50 text-xs uppercase tracking-widest text-stone-500"
+                        >
+                            <tr>
+                                <th class="px-5 py-3">Guest</th>
+                                <th class="px-5 py-3">Contact</th>
+                                <th class="px-5 py-3">Reservations</th>
+                                <th class="px-5 py-3">Latest stay</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            @forelse ($guests as $guest)
+                                <tr>
+                                    <td class="px-5 py-4 font-semibold">
+                                        {{ $guest->first_name }} {{ $guest->last_name }}
+                                    </td>
+                                    <td class="px-5 py-4 text-stone-500">
+                                        {{ $guest->email ?? 'No email' }}<br />{{ $guest->phone ?? 'No phone' }}
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        {{ $guest->reservations_count }}
+                                    </td>
+                                    <td class="px-5 py-4 text-stone-500">
+                                        {{ $guest->reservations->first()?->reservation_number ?? 'No reservations' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td
+                                        colspan="4"
+                                        class="px-5 py-10 text-center text-stone-500"
+                                    >
+                                        No guests found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="border-t border-stone-200 p-5">
+                    {{ $guests->links() }}
+                </div>
+            </section>
+        </div>
+    </div>
 </x-app-layout>

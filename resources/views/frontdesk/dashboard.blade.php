@@ -3,37 +3,259 @@
         <div class="flex items-end justify-between gap-4">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Front desk workspace</p>
-                <h2 class="mt-1 text-2xl font-semibold text-stone-900">Today's operations</h2>
+                <h2 class="mt-1 text-2xl font-semibold text-stone-900">
+                    Today's operations
+                </h2>
             </div>
-            <span class="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 sm:inline-flex">Live hotel data</span>
+            <span
+                class="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 sm:inline-flex"
+                >Live hotel data</span
+            >
         </div>
     </x-slot>
 
     <div class="bg-stone-50 py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-            @if(session('status'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">{{ session('status') }}</div>@endif
+            @if (session('status'))
+                <div
+                    class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"
+                >
+                    {{ session('status') }}
+                </div>
+            @endif
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                @foreach($metrics as $metric)
-                    <div class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ $metric['label'] }}</p><p class="mt-3 text-3xl font-semibold text-stone-900">{{ $metric['value'] }}</p></div>
+                @foreach ($metrics as $metric)
+                    <div
+                        class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+                    >
+                        <p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ $metric['label'] }}</p>
+                        <p class="mt-3 text-3xl font-semibold text-stone-900">{{ $metric['value'] }}</p>
+                    </div>
                 @endforeach
             </div>
 
             <div class="grid gap-6 lg:grid-cols-2">
-                <section id="arrivals" class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-                    <div class="border-b border-stone-200 p-5"><div class="flex items-center justify-between"><div><h3 class="font-semibold">Today's arrivals</h3><p class="mt-1 text-sm text-stone-500">Guests expected today</p></div><span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">{{ $arrivals->count() }}</span></div></div>
-                    <div class="divide-y divide-stone-100">@forelse($arrivals as $reservation)<div class="p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-semibold text-stone-900">{{ $reservation->customer?->name ?? $reservation->guests->first()?->first_name.' '.$reservation->guests->first()?->last_name ?? 'Guest' }}</p><p class="mt-1 text-xs text-stone-500">{{ $reservation->reservation_number }} · {{ $reservation->room?->roomType?->name ?? 'Room pending' }}</p></div><span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold uppercase">{{ $reservation->payment_status }}</span></div><div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-stone-500">Room {{ $reservation->room?->room_number ?? 'Unassigned' }} · {{ $reservation->adults + $reservation->children }} guests</p>@if($reservation->status->value === 'confirmed')<form method="post" action="{{ route('admin.operations.reservations.check-in', $reservation) }}">@csrf<button class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white">Check in</button></form>@else<span class="text-xs font-semibold text-amber-700">Pending confirmation</span>@endif</div></div>@empty<div class="p-6 text-sm text-stone-500">No arrivals scheduled today.</div>@endforelse</div>
+                <section
+                    id="arrivals"
+                    class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b border-stone-200 p-5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold">Today's arrivals</h3>
+                                <p class="mt-1 text-sm text-stone-500">Guests expected today</p>
+                            </div>
+                            <span
+                                class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700"
+                                >{{ $arrivals->count() }}</span
+                            >
+                        </div>
+                    </div>
+                    <div class="divide-y divide-stone-100">
+                        @forelse ($arrivals as $reservation)
+                            <div class="p-5">
+                                <div
+                                    class="flex items-start justify-between gap-3"
+                                >
+                                    <div>
+                                        <p class="font-semibold text-stone-900">{{ $reservation->customer?->name ?? $reservation->guests->first()?->first_name.' '.$reservation->guests->first()?->last_name ?? 'Guest' }}</p>
+                                        <p class="mt-1 text-xs text-stone-500">{{ $reservation->reservation_number }} · {{ $reservation->room?->roomType?->name ?? 'Room pending' }}</p>
+                                    </div>
+                                    <span
+                                        class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold uppercase"
+                                        >{{ $reservation->payment_status }}</span
+                                    >
+                                </div>
+                                <div
+                                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
+                                >
+                                    <p class="text-sm text-stone-500">Room {{ $reservation->room?->room_number ?? 'Unassigned' }} · {{ $reservation->adults + $reservation->children }} guests</p>
+                                    @if ($reservation->status->value === 'confirmed')
+                                        <form
+                                            method="post"
+                                            action="{{ route('admin.operations.reservations.check-in', $reservation) }}"
+                                        >
+                                            @csrf
+                                            <button
+                                                class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white"
+                                            >
+                                                Check in
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span
+                                            class="text-xs font-semibold text-amber-700"
+                                            >Pending confirmation</span
+                                        >
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-6 text-sm text-stone-500">
+                                No arrivals scheduled today.
+                            </div>
+                        @endforelse
+                    </div>
                 </section>
-                <section id="services" class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"><div class="flex items-center justify-between border-b border-stone-200 p-5"><div><h3 class="font-semibold">Guest service requests</h3><p class="mt-1 text-sm text-stone-500">Recent orders posted to guest folios.</p></div><a href="{{ route('frontdesk.services.index') }}" class="text-sm font-semibold text-amber-700">Add service</a></div><div class="grid gap-3 p-5 sm:grid-cols-3">@foreach(['new' => 'New orders', 'preparing' => 'Preparing', 'ready' => 'Ready'] as $status => $label)<div class="rounded-lg bg-stone-50 p-4"><p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ $label }}</p><p class="mt-2 text-2xl font-semibold">{{ $serviceCounts[$status] ?? 0 }}</p></div>@endforeach</div><div class="divide-y divide-stone-100">@forelse($serviceRequests as $order)<a href="{{ route('frontdesk.services.index') }}" class="flex items-center justify-between gap-4 p-4 transition hover:bg-stone-50"><div><p class="font-semibold">{{ $order->order_number }} · Room {{ $order->reservation->room->room_number }}</p><p class="mt-1 text-sm text-stone-500">{{ $order->items->pluck('description')->join(', ') }} · {{ str_replace('_', ' ', $order->category) }}</p></div><span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold uppercase text-amber-700">{{ $order->status }}</span></a>@empty<div class="p-5 text-sm text-stone-500">No guest service requests yet.</div>@endforelse</div></section>
+                <section
+                    id="services"
+                    class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-stone-200 p-5"
+                    >
+                        <div>
+                            <h3 class="font-semibold">
+                                Guest service requests
+                            </h3>
+                            <p class="mt-1 text-sm text-stone-500">Recent orders posted to guest folios.</p>
+                        </div>
+                        <a
+                            href="{{ route('frontdesk.services.index') }}"
+                            class="text-sm font-semibold text-amber-700"
+                            >Add service</a
+                        >
+                    </div>
+                    <div class="grid gap-3 p-5 sm:grid-cols-3">
+                        @foreach (['new' => 'New orders', 'preparing' => 'Preparing', 'ready' => 'Ready'] as $status => $label)
+                            <div class="rounded-lg bg-stone-50 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-widest text-stone-500">{{ $label }}</p>
+                                <p class="mt-2 text-2xl font-semibold">{{ $serviceCounts[$status] ?? 0 }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="divide-y divide-stone-100">
+                        @forelse ($serviceRequests as $order)
+                            <a
+                                href="{{ route('frontdesk.services.index') }}"
+                                class="flex items-center justify-between gap-4 p-4 transition hover:bg-stone-50"
+                                ><div>
+                                    <p class="font-semibold">{{ $order->order_number }} · Room {{ $order->reservation->room->room_number }}</p>
+                                    <p class="mt-1 text-sm text-stone-500">{{ $order->items->pluck('description')->join(', ') }} · {{ str_replace('_', ' ', $order->category) }}</p>
+                                </div>
+                                <span
+                                    class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold uppercase text-amber-700"
+                                    >{{ $order->status }}</span
+                                ></a
+                            >
+                        @empty
+                            <div class="p-5 text-sm text-stone-500">
+                                No guest service requests yet.
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
 
-                <section id="departures" class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-                    <div class="border-b border-stone-200 p-5"><div class="flex items-center justify-between"><div><h3 class="font-semibold">Today's departures</h3><p class="mt-1 text-sm text-stone-500">Guests due to check out</p></div><span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{{ $departures->count() }}</span></div></div>
-                    <div class="divide-y divide-stone-100">@forelse($departures as $reservation)<div class="p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-semibold text-stone-900">{{ $reservation->customer?->name ?? 'Guest' }}</p><p class="mt-1 text-xs text-stone-500">{{ $reservation->reservation_number }} · Room {{ $reservation->room->room_number }}</p></div><span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{{ $reservation->payment_status }}</span></div><div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-stone-500">Balance: ${{ number_format(max(0, (float) $reservation->total - (float) $reservation->payments->where('status', 'paid')->sum('amount')), 2) }}</p><form method="post" action="{{ route('admin.operations.reservations.check-out', $reservation) }}">@csrf<button class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white">Check out</button></form></div></div>@empty<div class="p-6 text-sm text-stone-500">No departures scheduled today.</div>@endforelse</div>
+                <section
+                    id="departures"
+                    class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+                >
+                    <div class="border-b border-stone-200 p-5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold">
+                                    Today's departures
+                                </h3>
+                                <p class="mt-1 text-sm text-stone-500">Guests due to check out</p>
+                            </div>
+                            <span
+                                class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700"
+                                >{{ $departures->count() }}</span
+                            >
+                        </div>
+                    </div>
+                    <div class="divide-y divide-stone-100">
+                        @forelse ($departures as $reservation)
+                            <div class="p-5">
+                                <div
+                                    class="flex items-start justify-between gap-3"
+                                >
+                                    <div>
+                                        <p class="font-semibold text-stone-900">{{ $reservation->customer?->name ?? 'Guest' }}</p>
+                                        <p class="mt-1 text-xs text-stone-500">{{ $reservation->reservation_number }} · Room {{ $reservation->room->room_number }}</p>
+                                    </div>
+                                    <span
+                                        class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                                        >{{ $reservation->payment_status }}</span
+                                    >
+                                </div>
+                                <div
+                                    class="mt-4 flex flex-wrap items-center justify-between gap-3"
+                                >
+                                    <p class="text-sm text-stone-500">Balance: ${{ number_format(max(0, (float) $reservation->total - (float) $reservation->payments->where('status', 'paid')->sum('amount')), 2) }}</p>
+                                    <form
+                                        method="post"
+                                        action="{{ route('admin.operations.reservations.check-out', $reservation) }}"
+                                    >
+                                        @csrf
+                                        <button
+                                            class="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white"
+                                        >
+                                            Check out
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-6 text-sm text-stone-500">
+                                No departures scheduled today.
+                            </div>
+                        @endforelse
+                    </div>
                 </section>
             </div>
 
-            <section id="rooms" class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b border-stone-200 p-5"><h3 class="font-semibold">Room board</h3><p class="mt-1 text-sm text-stone-500">Live room readiness for front-desk assignment.</p></div><div class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">@foreach($rooms as $room)<div class="rounded-lg border border-stone-200 p-4"><div class="flex items-center justify-between"><span class="font-semibold">{{ $room->room_number }}</span><span class="h-2.5 w-2.5 rounded-full {{ in_array($room->status->value, ['available', 'clean']) ? 'bg-emerald-500' : (in_array($room->status->value, ['maintenance', 'out_of_order']) ? 'bg-rose-500' : 'bg-amber-400') }}"></span></div><p class="mt-1 text-xs text-stone-500">{{ $room->roomType->name }}</p><p class="mt-3 text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $room->status->value) }}</p></div>@endforeach</div></section>
+            <section
+                id="rooms"
+                class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+            >
+                <div class="border-b border-stone-200 p-5">
+                    <h3 class="font-semibold">Room board</h3>
+                    <p class="mt-1 text-sm text-stone-500">Live room readiness for front-desk assignment.</p>
+                </div>
+                <div class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($rooms as $room)
+                        <div class="rounded-lg border border-stone-200 p-4">
+                            <div class="flex items-center justify-between">
+                                <span
+                                    class="font-semibold"
+                                    >{{ $room->room_number }}</span
+                                ><span
+                                    class="h-2.5 w-2.5 rounded-full {{ in_array($room->status->value, ['available', 'clean']) ? 'bg-emerald-500' : (in_array($room->status->value, ['maintenance', 'out_of_order']) ? 'bg-rose-500' : 'bg-amber-400') }}"
+                                ></span>
+                            </div>
+                            <p class="mt-1 text-xs text-stone-500">{{ $room->roomType->name }}</p>
+                            <p class="mt-3 text-xs font-semibold uppercase tracking-widest text-stone-500">{{ str_replace('_', ' ', $room->status->value) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
 
-            <section id="reservations" class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"><div class="border-b border-stone-200 p-5"><h3 class="font-semibold">Recent reservations</h3><p class="mt-1 text-sm text-stone-500">Quick access to the latest bookings.</p></div><div class="divide-y divide-stone-100">@foreach($recentReservations as $reservation)<a href="{{ route('reservations.show', $reservation) }}" class="flex items-center justify-between gap-4 p-5 transition hover:bg-stone-50"><div><p class="font-semibold">{{ $reservation->reservation_number }}</p><p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Room {{ $reservation->room->room_number }}</p></div><span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase">{{ $reservation->status->value }}</span></a>@endforeach</div></section>
+            <section
+                id="reservations"
+                class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+            >
+                <div class="border-b border-stone-200 p-5">
+                    <h3 class="font-semibold">Recent reservations</h3>
+                    <p class="mt-1 text-sm text-stone-500">Quick access to the latest bookings.</p>
+                </div>
+                <div class="divide-y divide-stone-100">
+                    @foreach ($recentReservations as $reservation)
+                        <a
+                            href="{{ route('reservations.show', $reservation) }}"
+                            class="flex items-center justify-between gap-4 p-5 transition hover:bg-stone-50"
+                            ><div>
+                                <p class="font-semibold">{{ $reservation->reservation_number }}</p>
+                                <p class="mt-1 text-sm text-stone-500">{{ $reservation->customer?->name ?? 'Guest' }} · Room {{ $reservation->room->room_number }}</p>
+                            </div>
+                            <span
+                                class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase"
+                                >{{ $reservation->status->value }}</span
+                            ></a
+                        >
+                    @endforeach
+                </div>
+            </section>
         </div>
     </div>
 </x-app-layout>
