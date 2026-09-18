@@ -36,4 +36,3 @@ Run the application in another terminal with `php artisan serve`.
 13. REST API
 14. Testing and optimization
 
-The complete product requirements are maintained in [PROMPT.md](PROMPT.md).
