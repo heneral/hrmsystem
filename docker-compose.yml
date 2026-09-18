@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: hotelhub
+      MYSQL_USER: hotelhub
+      MYSQL_PASSWORD: hotelhub
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - hotelhub-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "hotelhub", "-photelhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - hotelhub-redis:/data
+
+volumes:
+  hotelhub-mysql:
+  hotelhub-redis:
